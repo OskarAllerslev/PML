@@ -1,0 +1,155 @@
+---
+title: "PML - First assignment"
+author: "Markus, Oskar, Jan"
+date: "2026-11-17"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, fig.width = 5, fig.height = 4.5, fig.align = "center")
+set.seed(2026)
+```
+
+## Exercise 2.8
+
+We prove the law of total expectation in the continuous case by using $p(x) = \int p(x,y)\,dy$ (4) and $p(x,y) = p(x|y)p(y)$ (7) from the lecture notes. We work backwards and start from definition of conditional expectation:
+
+\begin{align*}
+\mathbb{E}_Y[\mathbb{E}_X[X\mid Y]]
+&= \int \mathbb{E}_X[X\mid y]p(y)\,dy\\
+&= \int \left(\int x\,p(x\mid y)\,dx\right)p(y)\,dy\\
+&= \iint x\,p(x\mid y)p(y)\,dx\,dy\\
+&= \iint x\,p(x,y)\,dx\,dy\\
+&= \int x\left(\int p(x,y)\,dy\right)dx\\
+&= \int x\,p(x)\,dx\\
+&= \mathbb{E}[X].
+\end{align*}
+
+We then prove the law of total variance by expanding the conditional variance and the variance of the conditional expectation using the variance identity $\operatorname{var}(x) = \mathbb{E}[x^2] - (\mathbb{E}[x])^2$, which follows from expanding the definition (20) in the notes. Starting from the right side and using the law of total expectation from above to the final expression gives:
+
+$\mathbb{E}_y[\operatorname{var}_x(x\mid y)] + \operatorname{var}_y(\mathbb{E}_x[x\mid y]) = \mathbb{E}_y[\mathbb{E}_x[x^2\mid y]] - \mathbb{E}_y[(\mathbb{E}_x[x\mid y])^2] + \mathbb{E}_y[(\mathbb{E}_x[x\mid y])^2] - (\mathbb{E}_y[\mathbb{E}_x[x\mid y]])^2 = \mathbb{E}_y[\mathbb{E}_x[x^2\mid y]] - (\mathbb{E}_y[\mathbb{E}_x[x\mid y]])^2 = \mathbb{E}[x^2] - (\mathbb{E}[x])^2 = \operatorname{var}(x)$
+
+## Exercise 8.9
+
+We look at figure 8.26. The Markov blanket of $x$ consists of its parents, its children and the other parents of its children. We condition on all of these. To show the result with d separation, we have to show that every path from $x$ to a node $y$ outside the blanket is blocked. Such a path has to leave $x$ either through a parent or through a child of $x$. If the path goes through a parent $p$, the arrow goes from $p$ into $x$. This means $p$ is either head to tail or tail to tail on the path. Since $p$ is observed, the path is blocked.
+
+If the path goes through a child $c$, there are two cases. If the path goes $x \to c \to \ldots$, then $c$ is head-to-tail and observed, so the path is blocked. If the path goes $x \to c \leftarrow z$, then $c$ is head-to-head, so $c$ does not block the path. But then $z$ is also a parent of $c$, so $z$ is a co-parent and is observed. The arrow goes out of $z$, so $z$ is head-to-tail or tail-to-tail, and the path is blocked at $z$.
+
+So all paths from $x$ to nodes outside the blanket are blocked, which means
+$$p(x | \text{blanket}, \text{rest}) = p(x | \text{blanket})$$
+so $x$ is independent of the rest of the graph given its Markov blanket.
+
+
+## Exercise 8.11
+
+From Section 8.2.1 we have $p(B=1) = 0.9$, $p(F=1) = 0.9$ and
+
+$$p(G=1|B=1,F=1) = 0.8, \quad p(G=1|B=1,F=0) = 0.2$$
+$$p(G=1|B=0,F=1) = 0.2, \quad p(G=1|B=0,F=0) = 0.1$$
+
+The driver $D$ only depends on $G$, with $p(D=1|G=1) = 0.9$ and $p(D=0|G=0) = 0.9$.
+
+First we find $p(D=0|B,F)$ by summing over $G$.
+
+Summing over $G$ and using that $D$ only depends on $G$, so $p(D=0|G,B,F) = p(D=0|G)$, we get
+
+$$
+\begin{aligned}
+p(D=0|B,F) &= \sum_G p(D=0,G|B,F) \\
+&= \sum_G p(D=0|G,B,F)\,p(G|B,F) \\
+&= \sum_G p(D=0|G)\,p(G|B,F) \\
+&= p(D=0|G=0)\,p(G=0|B,F) + p(D=0|G=1)\,p(G=1|B,F) \\
+&= 0.9 \cdot p(G=0|B,F) + 0.1 \cdot p(G=1|B,F)
+\end{aligned}
+$$
+This gives
+
+$$p(D=0|B=1,F=1) = 0.9 \cdot 0.2 + 0.1 \cdot 0.8 = 0.26$$
+$$p(D=0|B=1,F=0) = 0.9 \cdot 0.8 + 0.1 \cdot 0.2 = 0.74$$
+$$p(D=0|B=0,F=1) = 0.9 \cdot 0.8 + 0.1 \cdot 0.2 = 0.74$$
+$$p(D=0|B=0,F=0) = 0.9 \cdot 0.9 + 0.1 \cdot 0.1 = 0.82$$
+
+If only $D=0$ observed, we need $p(D=0|F=0)$ and $p(D=0)$:
+
+$$p(D=0|F=0) = 0.74 \cdot 0.9 + 0.82 \cdot 0.1 = 0.748$$
+$$p(D=0) = 0.26 \cdot 0.81 + 0.74 \cdot 0.09 + 0.74 \cdot 0.09 + 0.82 \cdot 0.01 = 0.352$$
+
+Using Bayes theorem (35) in the notes:
+
+$$p(F=0|D=0) = \frac{0.748 \cdot 0.1}{0.352} \approx 0.213$$
+
+If also $B=0$ observed, we only sum over $F$:
+
+$$p(F=0|D=0,B=0) = \frac{0.82 \cdot 0.1}{0.82 \cdot 0.1 + 0.74 \cdot 0.9} \approx 0.110$$
+
+This is lower than 0.213. The flat battery explains why the driver says the gauge is empty, so the tank does not need to be empty to explain it ("explaining away", as in the slides). 
+
+## programming exercise
+
+The model is $y = x^T\theta + \varepsilon$ with $\varepsilon \sim N(0,\sigma^2)$ and prior $\theta \sim N(0, I)$. Since both are Gaussian and $y$ only depends on $\theta$ through a mean shift, $\theta$ and $y$ are jointly Gaussian by (31) in the notes. Conditioning on $y$ with (29) gives the posterior, from Section 4.2 equation (55)-(56) with $\Sigma_\theta = I$:
+$$S_N = I - X^T(\sigma^2 I + XX^T)^{-1}X, \quad m_N = X^T(\sigma^2 I + XX^T)^{-1} y$$
+The posterior predictive is, by (57) in the notes:
+
+$$p(y|x,D) = N(x^T m_N, \; \sigma^2 + x^T S_N x)$$
+
+The variance is the noise $\sigma^2$ plus $x^T S_N x$, which comes from our uncertainty about $\theta$.
+
+```{r}
+library(ggplot2)
+
+grid <- expand.grid(a = seq(-3, 3, length.out = 200), b = seq(-3, 3, length.out = 200))
+G <- as.matrix(grid)
+
+run <- function(sx, s2) {
+  X <- cbind(rnorm(20, 0, sqrt(sx[1])), rnorm(20, 0, sqrt(sx[2])))
+  y <- X %*% c(-1, 1) + rnorm(20, 0, sqrt(s2))
+  K <- solve(s2 * diag(20) + X %*% t(X))
+  S <- diag(2) - t(X) %*% K %*% X
+  m <- t(X) %*% K %*% y
+  D <- sweep(G, 2, m)
+  grid$pdf <- exp(-rowSums(D %*% solve(S) * D) / 2) / (2 * pi * sqrt(det(S)))
+  grid$var <- s2 + rowSums(G %*% S * G)
+  print(list(mean = m, cov = S))
+print(ggplot(grid, aes(a, b, fill = pdf)) + geom_raster() + coord_fixed() +
+        scale_x_continuous(breaks = -3:3) + scale_y_continuous(breaks = -3:3) +
+        labs(x = "theta1", y = "theta2", title = "Posterior pdf"))
+print(ggplot(grid, aes(a, b, fill = var)) + geom_raster() + coord_fixed() +
+        scale_x_continuous(breaks = -3:3) + scale_y_continuous(breaks = -3:3) +
+        labs(x = "x1", y = "x2", title = "Predictive variance"))
+}
+```
+
+## A
+
+This is the case of where $x \sim \mathcal N(0, I)$, $\sigma^2 = 0.1$
+
+```{r, fig.show="hold", out.width="49%", fig.width=4, fig.height=4}
+run(c(1, 1), 0.1)
+```
+
+The posterior is a small point mass around the true $\theta = (-1, 1)$. The predictive variance is lowest near the origin. It grows quadratically and about uniformally fast in every direction away from the data.
+
+## D
+
+Now we have $x \sim \mathcal N(0, \operatorname{diag}(0.1, 1))$, $\sigma^2 = 0.1$
+
+```{r, fig.show="hold", out.width="49%", fig.width=4, fig.height=4}
+run(c(0.1, 1), 0.1)
+```
+
+## Comparison and explanation
+
+In D the posterior is stretched along the $\theta_1$ axis, its variance in $\theta_1$ is roughly 10 times larger than in $\theta_2$, while in A the two are about equal. The predictive variance is also no longer round. It grows faster along the $x_1$ direction than along $x_2$.
+This is due to the posterior precision is $S_N^{-1} = I + X^TX/\sigma^2$ (the same as (56), see the remark after it in the notes), and for $N$ points $X^TX \approx N\Sigma_x$. This gives the following for A $S_N^{-1} \approx I + 20 I / 0.1 = \operatorname{diag}(201, 201)$, so we are equally certain about both parameters, Whereas D we have $S_N^{-1} \approx \operatorname{diag}(1 + 20 \cdot 0.1/0.1,\; 1 + 20/0.1) = \operatorname{diag}(21, 201)$.
+
+In D the inputs barely vary in the $x_1$ direction. Changing $\theta_1$ hardly changes the predictions on the training points, so the data says little about $\theta_1$ and it stays uncertain. In the predictive variance, $x^TS_Nx$ is large whenever $x$ points in a direction we have not seen data in (here $x_1$). 
+
+## Changing the label noise to $\sigma^2 = 0.01$
+
+```{r, fig.show="hold", out.width="49%", fig.width=4, fig.height=4}
+run(c(0.1, 1), 0.01)
+```
+
+With 10 times less label noise, every data point is 10 times more informative. $S_N^{-1} \approx \operatorname{diag}(201, 2001)$.
+
+The posterior is tighter, so on the $[-3,3]^2$ grid it is almost a point, and it sits closer to the true $\theta$. It is still stretched along $\theta_1$, because the shape comes from $\Sigma_x$, not from the noise. The Predictive variance is smaller overall. The floor drops from 0.1 to 0.01, and the $x^TS_Nx$ term shrinks too.
