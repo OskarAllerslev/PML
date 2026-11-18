@@ -12,7 +12,7 @@ set.seed(2026)
 
 ## Exercise 2.8
 
-We prove the law of total expectation in the continuous case by using $p(x) = \int p(x,y)\,dy$ (4) and $p(x,y) = p(x|y)p(y)$ (7) from the lecture notes. We work backwards and start from definition of conditional expectation:
+We prove the law of total expectation in the continuous case by using (4), $p(x) = \int p(x,y)\,dy$ and (7), $p(x,y) = p(x|y)p(y)$ from the lecture notes. We work backwards and start from definition of conditional expectation:
 
 \begin{align*}
 \mathbb{E}_Y[\mathbb{E}_X[X\mid Y]]
@@ -47,11 +47,9 @@ From Section 8.2.1 we have $p(B=1) = 0.9$, $p(F=1) = 0.9$ and
 $$p(G=1|B=1,F=1) = 0.8, \quad p(G=1|B=1,F=0) = 0.2$$
 $$p(G=1|B=0,F=1) = 0.2, \quad p(G=1|B=0,F=0) = 0.1$$
 
-The driver $D$ only depends on $G$, with $p(D=1|G=1) = 0.9$ and $p(D=0|G=0) = 0.9$.
+The driver $D$ only depends on $G$, with $p(D=1|G=1) = 0.9$ and $p(D=0|G=0) = 0.9$. Since probabilities sum to one, $p(B=0) = p(F=0) = 0.1$, $p(D=0|G=1) = 0.1$ and $p(G=0|B,F) = 1 - p(G=1|B,F)$.
 
-First we find $p(D=0|B,F)$ by summing over $G$.
-
-Summing over $G$ and using that $D$ only depends on $G$, so $p(D=0|G,B,F) = p(D=0|G)$, we get
+First we find $p(D=0|B,F)$ by summing over $G$ and using that $D$ only depends on $G$, so $p(D=0|G,B,F) = p(D=0|G)$:
 
 $$
 \begin{aligned}
@@ -62,27 +60,56 @@ p(D=0|B,F) &= \sum_G p(D=0,G|B,F) \\
 &= 0.9 \cdot p(G=0|B,F) + 0.1 \cdot p(G=1|B,F)
 \end{aligned}
 $$
+
 This gives
 
-$$p(D=0|B=1,F=1) = 0.9 \cdot 0.2 + 0.1 \cdot 0.8 = 0.26$$
-$$p(D=0|B=1,F=0) = 0.9 \cdot 0.8 + 0.1 \cdot 0.2 = 0.74$$
-$$p(D=0|B=0,F=1) = 0.9 \cdot 0.8 + 0.1 \cdot 0.2 = 0.74$$
-$$p(D=0|B=0,F=0) = 0.9 \cdot 0.9 + 0.1 \cdot 0.1 = 0.82$$
+$$
+\begin{aligned}
+p(D=0|B=1,F=1) &= 0.9 \cdot p(G=0|B=1,F=1) + 0.1 \cdot p(G=1|B=1,F=1) = 0.9 \cdot 0.2 + 0.1 \cdot 0.8 = 0.26 \\
+p(D=0|B=1,F=0) &= 0.9 \cdot p(G=0|B=1,F=0) + 0.1 \cdot p(G=1|B=1,F=0) = 0.9 \cdot 0.8 + 0.1 \cdot 0.2 = 0.74 \\
+p(D=0|B=0,F=1) &= 0.9 \cdot p(G=0|B=0,F=1) + 0.1 \cdot p(G=1|B=0,F=1) = 0.9 \cdot 0.8 + 0.1 \cdot 0.2 = 0.74 \\
+p(D=0|B=0,F=0) &= 0.9 \cdot p(G=0|B=0,F=0) + 0.1 \cdot p(G=1|B=0,F=0) = 0.9 \cdot 0.9 + 0.1 \cdot 0.1 = 0.82
+\end{aligned}
+$$
 
-If only $D=0$ observed, we need $p(D=0|F=0)$ and $p(D=0)$:
+If only $D=0$ is observed, Bayes theorem (35) in the notes gives
 
-$$p(D=0|F=0) = 0.74 \cdot 0.9 + 0.82 \cdot 0.1 = 0.748$$
-$$p(D=0) = 0.26 \cdot 0.81 + 0.74 \cdot 0.09 + 0.74 \cdot 0.09 + 0.82 \cdot 0.01 = 0.352$$
+$$p(F=0|D=0) = \frac{p(D=0|F=0)\,p(F=0)}{p(D=0)}$$
 
-Using Bayes theorem (35) in the notes:
+so we need $p(D=0|F=0)$ and $p(D=0)$. For $p(D=0|F=0)$ we sum over $B$, using that $B$ and $F$ are independent, so $p(B|F=0) = p(B)$:
 
-$$p(F=0|D=0) = \frac{0.748 \cdot 0.1}{0.352} \approx 0.213$$
+$$
+\begin{aligned}
+p(D=0|F=0) &= \sum_B p(D=0|B,F=0)\,p(B) \\
+&= p(D=0|B=1,F=0)\,p(B=1) + p(D=0|B=0,F=0)\,p(B=0) \\
+&= 0.74 \cdot 0.9 + 0.82 \cdot 0.1 = 0.748
+\end{aligned}
+$$
 
-If also $B=0$ observed, we only sum over $F$:
+For $p(D=0)$ we sum over both $B$ and $F$, using $p(B,F) = p(B)\,p(F)$:
 
-$$p(F=0|D=0,B=0) = \frac{0.82 \cdot 0.1}{0.82 \cdot 0.1 + 0.74 \cdot 0.9} \approx 0.110$$
+$$
+\begin{aligned}
+p(D=0) &= \sum_{B,F} p(D=0|B,F)\,p(B)\,p(F) \\
+&= 0.26 \cdot 0.9 \cdot 0.9 + 0.74 \cdot 0.9 \cdot 0.1 + 0.74 \cdot 0.1 \cdot 0.9 + 0.82 \cdot 0.1 \cdot 0.1 = 0.352
+\end{aligned}
+$$
 
-This is lower than 0.213. The flat battery explains why the driver says the gauge is empty, so the tank does not need to be empty to explain it ("explaining away", as in the slides). 
+Inserting in Bayes theorem:
+
+$$p(F=0|D=0) = \frac{p(D=0|F=0)\,p(F=0)}{p(D=0)} = \frac{0.748 \cdot 0.1}{0.352} \approx 0.213$$
+
+If also $B=0$ is observed, we use Bayes theorem conditioned on $B=0$. Since $B$ and $F$ are independent, $p(F|B=0) = p(F)$, and we only sum over $F$ in the denominator:
+
+$$
+\begin{aligned}
+p(F=0|D=0,B=0) &= \frac{p(D=0|B=0,F=0)\,p(F=0)}{\sum_F p(D=0|B=0,F)\,p(F)} \\
+&= \frac{p(D=0|B=0,F=0)\,p(F=0)}{p(D=0|B=0,F=0)\,p(F=0) + p(D=0|B=0,F=1)\,p(F=1)} \\
+&= \frac{0.82 \cdot 0.1}{0.82 \cdot 0.1 + 0.74 \cdot 0.9} \approx 0.110
+\end{aligned}
+$$
+
+This is lower than 0.213. The flat battery explains why the driver says the gauge is empty, so the tank does not need to be empty to explain it ("explaining away", as in the slides).
 
 ## programming exercise
 
