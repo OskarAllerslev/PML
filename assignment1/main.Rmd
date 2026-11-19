@@ -154,7 +154,7 @@ This is the case of where $x \sim \mathcal N(0, I)$, $\sigma^2 = 0.1$
 run(c(1, 1), 0.1)
 ```
 
-The posterior is a small point mass around the true $\theta = (-1, 1)$. The predictive variance is lowest near the origin. It grows quadratically and about uniformally fast in every direction away from the data.
+The posterior is a small point mass around the true $\theta = (-1, 1)$. The predictive variance is lowest near the origin. It grows about uniformally fast in every direction away from the data.
 
 ## D
 
