@@ -6,7 +6,8 @@ output: pdf_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, fig.width = 5, fig.height = 4.5, fig.align = "center")
+knitr::opts_chunk$set(echo = TRUE, fig.width = 5, fig.height = 4.5, fig.align = "center",
+                      attr.source = ".numberLines")
 set.seed(2026)
 ```
 
@@ -111,6 +112,9 @@ $$
 
 This is lower than 0.213. The flat battery explains why the driver says the gauge is empty, so the tank does not need to be empty to explain it ("explaining away", as in the slides).
 
+Our model is the graph in Figure 8.54 with $a = B$, $b = F$, $c = G$ and $d = D$.The path $B \to G \leftarrow F$ is head-to-head at $G$, so with nothing observed it is blocked and $B \perp\!\!\!\perp F$. Observing $D$, a descendant of $G$, "unblocks" the path, so $B$ and $F$ become dependent given $D$. This is why also observing $B = 0$ lowers the probability from $p(F = 0 \mid D = 0) \approx 0.213$ to $p(F = 0 \mid D = 0, B = 0) \approx 0.110$, even though $p(F = 0 \mid B = 0) = p(F = 0)$. Since $D$ is only a noisy report of $G$, the first probability is lower than $p(F = 0 \mid G = 0) \approx 0.257$ in (8.32), but the flat battery still explains away the empty reading.
+
+
 ## programming exercise
 
 The model is $y = x^T\theta + \varepsilon$ with $\varepsilon \sim N(0,\sigma^2)$ and prior $\theta \sim N(0, I)$. Since both are Gaussian and $y$ only depends on $\theta$ through a mean shift, $\theta$ and $y$ are jointly Gaussian by (31) in the notes. Conditioning on $y$ with (29) gives the posterior, from Section 4.2 equation (55)-(56) with $\Sigma_\theta = I$:
@@ -123,6 +127,7 @@ The variance is the noise $\sigma^2$ plus $x^T S_N x$, which comes from our unce
 
 ```{r}
 library(ggplot2)
+set.seed(2026)
 
 grid <- expand.grid(a = seq(-3, 3, length.out = 200), b = seq(-3, 3, length.out = 200))
 G <- as.matrix(grid)
@@ -180,3 +185,325 @@ run(c(0.1, 1), 0.01)
 With 10 times less label noise, every data point is 10 times more informative. $S_N^{-1} \approx \operatorname{diag}(201, 2001)$.
 
 The posterior is tighter, so on the $[-3,3]^2$ grid it is almost a point, and it sits closer to the true $\theta$. It is still stretched along $\theta_1$, because the shape comes from $\Sigma_x$, not from the noise. The Predictive variance is smaller overall. The floor drops from 0.1 to 0.01, and the $x^TS_Nx$ term shrinks too.
+
+
+
+
+
+
+## Exercise 9.10
+
+So we have $p(\mathbf{x}) = \sum_{k=1}^K \pi_k\, p(\mathbf{x} \mid k)$ with
+$\mathbf{x} = (\mathbf{x}_a, \mathbf{x}_b)$, and assume $p(\mathbf{x}_a) > 0$. Now, for each component we define its marginal and conditional
+\[
+  p(\mathbf{x}_a \mid k) = \int p(\mathbf{x}_a, \mathbf{x}_b \mid k)\, d\mathbf{x}_b, \qquad
+  p(\mathbf{x}_b \mid \mathbf{x}_a, k) = \frac{p(\mathbf{x}_a, \mathbf{x}_b \mid k)}{p(\mathbf{x}_a \mid k)}.
+\]
+Integrating the mixture over $\mathbf{x}_b$ and as the sum is finite, we can swap sum and integral (fubini), gives
+$p(\mathbf{x}_a) = \sum_j \pi_j\, p(\mathbf{x}_a \mid j)$. By the product rule,
+\[
+  p(\mathbf{x}_b \mid \mathbf{x}_a) = \frac{p(\mathbf{x}_a, \mathbf{x}_b)}{p(\mathbf{x}_a)}
+  = \frac{\sum_k \pi_k\, p(\mathbf{x}_a \mid k)\, p(\mathbf{x}_b \mid \mathbf{x}_a, k)}
+         {\sum_j \pi_j\, p(\mathbf{x}_a \mid j)},
+\]
+which we then write it as
+\[
+  p(\mathbf{x}_b \mid \mathbf{x}_a) = \sum_{k=1}^K \lambda_k(\mathbf{x}_a)\, p(\mathbf{x}_b \mid \mathbf{x}_a, k)
+\]
+with
+\[
+  \lambda_k(\mathbf{x}_a) = \frac{\pi_k\, p(\mathbf{x}_a \mid k)}{\sum_{j=1}^K \pi_j\, p(\mathbf{x}_a \mid j)}
+  = p(k \mid \mathbf{x}_a).
+\]
+This is a mixture distribution. The coefficients fullfill $\lambda_k \geq 0$ and also $\sum_k \lambda_k = 1$,
+and each component $p(\mathbf{x}_b \mid \mathbf{x}_a, k)$ integrates to
+$p(\mathbf{x}_a \mid k)/p(\mathbf{x}_a \mid k) = 1$ over $\mathbf{x}_b$.
+So the mixing coefficients are the responsibilities of the components given $\mathbf{x}_a$, and the
+component densities are the conditionals $p(\mathbf{x}_b \mid \mathbf{x}_a, k)$ of the original
+components. The coefficients depend on $\mathbf{x}_a$, unlike $\pi_k$.
+For a Gaussian mixture, $p(\mathbf{x}_a \mid k) = \mathcal{N}(\mathbf{x}_a \mid \mu_{k,a}, \Sigma_{k,aa})$
+by (2.92) and (2.93), and $p(\mathbf{x}_b \mid \mathbf{x}_a, k)$ is the Gaussian given by (2.81) to (2.82)
+with $a$ and $b$ swapped. So the conditional is again a Gaussian mixture.
+
+\section*{Exercise 12.4}
+
+Let $p(\mathbf{z}) = \mathcal{N}(\mathbf{z} \mid \mathbf{m}, \Sigma)$ and
+$p(\mathbf{x} \mid \mathbf{z}) = \mathcal{N}(\mathbf{x} \mid \mathbf{W}\mathbf{z} + \mu, \sigma^2\mathbf{I})$.
+This is a linear Gaussian model, so by using (2.115)
+\[
+  p(\mathbf{x}) = \mathcal{N}\left(\mathbf{x} \mid \mathbf{W}\mathbf{m} + \mu,\;
+  \mathbf{W}\Sigma\mathbf{W}^T + \sigma^2\mathbf{I}\right).
+\]
+A valid covariance $\Sigma$ is symmetric positive definite, so we can write $\Sigma = \mathbf{L}\mathbf{L}^T$
+with $\mathbf{L}$ an invertible $M \times M$ matrix. We redefine the
+parameters as
+\[
+  \widetilde{\mathbf{W}} = \mathbf{W}\mathbf{L}, \qquad \widetilde{\mu} = \mu + \mathbf{W}\mathbf{m}.
+\]
+Then $\widetilde{\mathbf{W}}\widetilde{\mathbf{W}}^T = \mathbf{W}\mathbf{L}\mathbf{L}^T\mathbf{W}^T
+= \mathbf{W}\Sigma\mathbf{W}^T$, so
+\[
+  p(\mathbf{x}) = \mathcal{N}\left(\mathbf{x} \mid \widetilde{\mu},\;
+  \widetilde{\mathbf{W}}\widetilde{\mathbf{W}}^T + \sigma^2\mathbf{I}\right),
+\]
+which is the standard PPCA marginal (12.35)--(12.36) with parameters $\widetilde{\mathbf{W}}$,
+$\widetilde{\mu}$ and $\sigma^2$. Any standard PPCA model $(\mathbf{W}_0, \mu_0, \sigma^2)$
+is obtained from the general model with $\mathbf{W} = \mathbf{W}_0\mathbf{L}^{-1}$ and
+$\mu = \mu_0 - \mathbf{W}_0\mathbf{L}^{-1}\mathbf{m}$. So for any valid $\mathbf{m}$ and $\Sigma$ the two
+models give the same family of marginals $p(\mathbf{x})$, and assuming
+$p(\mathbf{z}) = \mathcal{N}(\mathbf{z} \mid \mathbf{0}, \mathbf{I})$ loses no generality.
+
+
+
+
+*Sorry for the switch from R to Python halfway through. Some of us are less experienced with Python, so we have used the reticulate package to run the Python code directly in this R Markdown file.* 
+
+
+```{r}
+library(reticulate)
+```
+
+
+
+```{python, include=FALSE}
+import sys
+import torch._logging._internal as tli
+if hasattr(tli, '_StderrHandler'):
+    tli._StderrHandler.stream = property(lambda self: sys.stderr, lambda self, value: None)
+```
+
+## Programming exercise pt. 2: VAE on binarized MNIST
+
+The VAE has a latent variable $z$ with prior $p(z) = N(0, I)$ and a decoder $p(x|z)$, so $p(x) = \int p(z)\,p(x|z)\,dz$ , as in Section 8 in the notes. Since the pixels are 0 or 1, the decoder gives a Bernoulli probability for each pixel. The encoder approximates the posterior with $q(z|x) = N(\mu(x), \operatorname{diag}(\sigma^2(x)))$, and we train by maximizing the ELBO value $$\mathbb{E}_{q(z|x)}[\log p(x|z)] - KL(q(z|x)\,\|\,p(z)).$$
+This is the loss used in the reference example, which we use as a starting point. We load the data with the data loaders from the exercise.
+
+```{python}
+import torch
+import matplotlib.pyplot as plt
+from torch import nn, optim
+from torch.nn import functional as F
+from torchvision import datasets, transforms
+
+_ = torch.manual_seed(1)
+kwargs = {}
+
+train_loader = torch.utils.data.DataLoader(
+    datasets.MNIST('../data', train=True, download=True,
+                   transform=transforms.Compose([
+                       transforms.ToTensor(),
+                       transforms.Normalize((0.1307,), (0.3081,)),
+                       lambda x: x>0,
+                       lambda x: x.float(),
+            ])),
+    batch_size=128, shuffle=True, **kwargs)
+test_loader = torch.utils.data.DataLoader(
+    datasets.MNIST('../data', train=False, transform=transforms.Compose([
+                       transforms.ToTensor(),
+                       transforms.Normalize((0.1307,), (0.3081,)),
+                       lambda x: x>0,
+                       lambda x: x.float(),
+                   ])),
+    batch_size=1000, shuffle=True, **kwargs)
+```
+
+### 1. VAE with a 2 dimensional latent space
+
+We use the model and loss function from the PyTorch example and only change the latent dimension from 20 to 2.
+
+```{python}
+class VAE(nn.Module):
+    def __init__(self):
+        super(VAE, self).__init__()
+        self.fc1 = nn.Linear(784, 400)
+        self.fc21 = nn.Linear(400, 2)
+        self.fc22 = nn.Linear(400, 2)
+        self.fc3 = nn.Linear(2, 400)
+        self.fc4 = nn.Linear(400, 784)
+
+    def encode(self, x):
+        h1 = F.relu(self.fc1(x))
+        return self.fc21(h1), self.fc22(h1)
+
+    def reparameterize(self, mu, logvar):
+        std = torch.exp(0.5*logvar)
+        eps = torch.randn_like(std)
+        return mu + eps*std
+
+    def decode(self, z):
+        h3 = F.relu(self.fc3(z))
+        return torch.sigmoid(self.fc4(h3))
+
+    def forward(self, x):
+        mu, logvar = self.encode(x.view(-1, 784))
+        z = self.reparameterize(mu, logvar)
+        return self.decode(z), mu, logvar
+
+
+def loss_function(recon_x, x, mu, logvar):
+    BCE = F.binary_cross_entropy(recon_x, x.view(-1, 784), reduction='sum')
+    KLD = -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp())
+    return BCE + KLD
+
+
+def train(model, epochs=10):
+    optimizer = optim.Adam(model.parameters(), lr=1e-3)
+    model.train()
+    for epoch in range(1, epochs + 1):
+        train_loss = 0
+        for data, _ in train_loader:
+            optimizer.zero_grad()
+            recon_batch, mu, logvar = model(data)
+            loss = loss_function(recon_batch, data, mu, logvar)
+            loss.backward()
+            train_loss += loss.item()
+            optimizer.step()
+    print('Average loss after {} epochs: {:.2f}'.format(
+          epochs, train_loss / len(train_loader.dataset)))
+
+
+def plot_latent(ax, encode):
+    Z, Y = [], []
+    with torch.no_grad():
+        for data, labels in test_loader:
+            Z.append(encode(data.view(-1, 784)))
+            Y.append(labels)
+    Z, Y = torch.cat(Z), torch.cat(Y)
+    points = ax.scatter(Z[:, 0], Z[:, 1], c=Y, cmap='tab10', s=2)
+    plt.colorbar(points, ax=ax, ticks=range(10), label='digit')
+    ax.set_xlabel('z1')
+    ax.set_ylabel('z2')
+    ax.set_title('Latent space')
+```
+
+```{python}
+vae = VAE()
+train(vae)
+```
+
+### 2. Decoding a grid of latent points
+
+We take $k$ equally spaced values $u$ in $(0, 1)$ and map them through the inverse Gaussian CDF, $z = \Phi^{-1}(u)$. A uniform $u$ gives $\Phi^{-1}(u) \sim N(0, 1)$, so the grid points are equally spaced in probability under the prior $p(z)$. We leave out $u = 0$ and $u = 1$, since $\Phi^{-1}$ is $\pm\infty$ there. For each of the $k \times k$ grid points we show the mean of $p(x|z)$, i.e. the pixel probabilities, as a $28 \times 28$ image.
+
+```{python}
+def plot_manifold(ax, decode, k=15):
+    z = torch.distributions.Normal(0, 1).icdf(torch.linspace(0.05, 0.95, k))
+    z1, z2 = torch.meshgrid(z, z, indexing='xy')
+    with torch.no_grad():
+        imgs = decode(torch.stack([z1.flatten(), z2.flatten()], 1)).view(k, k, 28, 28)
+    grid = imgs.flip(0).permute(0, 2, 1, 3).reshape(k * 28, k * 28)
+    ax.imshow(grid, cmap='gray', vmin=0, vmax=1)
+    ax.axis('off')
+    ax.set_title('p(x|z) on a grid')
+
+
+def plot_vae(encode, decode, title):
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 4.5))
+    plot_latent(ax1, encode)
+    plot_manifold(ax2, decode)
+    fig.suptitle(title)
+    plt.show()
+```
+
+```{python, out.width="100%"}
+plot_vae(lambda x: vae.encode(x)[0], vae.decode, 'VAE from the PyTorch example')
+```
+
+The left plot shows the encoder mean $\mu(x)$ of each test image, colored by digit. The VAE never sees the labels, but images of the same digit still end up in the same region. The 1s form a separate band, while digits that look alike, like 4, 7 and 9 or 3, 5 and 8, overlap in the middle. The points lie around the origin with roughly unit scale, because the KL term pulls $q(z|x)$ towards $N(0, I)$.
+
+The right plot shows the decoded grid. The digits change smoothly from one to another, and every grid point gives a digit-like image, because the encoded data covers the region where the prior has its mass. Each digit appears in the same place as its cluster in the left plot.
+
+### 3. Better separation with a deeper network
+
+We make the encoder and decoder deeper, with two hidden layers of 512 and 256 units, and train for 20 epochs instead of 10. A more flexible encoder can place the digits further apart in the 2D latent space.
+
+```{python}
+class DeepVAE(VAE):
+    def __init__(self):
+        super(DeepVAE, self).__init__()
+        self.enc = nn.Sequential(nn.Linear(784, 512), nn.ReLU(),
+                                 nn.Linear(512, 256), nn.ReLU())
+        self.fc21 = nn.Linear(256, 2)
+        self.fc22 = nn.Linear(256, 2)
+        self.dec = nn.Sequential(nn.Linear(2, 256), nn.ReLU(),
+                                 nn.Linear(256, 512), nn.ReLU(),
+                                 nn.Linear(512, 784))
+
+    def encode(self, x):
+        h = self.enc(x)
+        return self.fc21(h), self.fc22(h)
+
+    def decode(self, z):
+        return torch.sigmoid(self.dec(z))
+```
+
+```{python}
+deep_vae = DeepVAE()
+train(deep_vae, epochs=20)
+```
+
+```{python, out.width="100%"}
+plot_vae(lambda x: deep_vae.encode(x)[0], deep_vae.decode, 'Deeper VAE')
+```
+
+The average loss drops from about 161 to about 139. The 0s and 1s are now on opposite sides of the latent space, and 2 and 6 are more separated than before. 4, 7 and 9 still overlap, since they look alike and two dimensions leave little room.
+
+### 4. Using torch.distributions
+
+Now the encoder returns a Normal distribution object and the decoder a Bernoulli distribution object. `Independent(..., 1)` makes `log_prob` sum over the latent dimensions and the pixels. We sample with `rsample()`, which is reparameterized, so the `reparameterize` method is no longer needed, and `kl_divergence` gives the KL term. The loss is minus the ELBO.
+
+```{python}
+from torch.distributions import Normal, Bernoulli, Independent, kl_divergence
+
+class VAEDist(nn.Module):
+    def __init__(self):
+        super(VAEDist, self).__init__()
+        self.fc1 = nn.Linear(784, 400)
+        self.fc21 = nn.Linear(400, 2)
+        self.fc22 = nn.Linear(400, 2)
+        self.fc3 = nn.Linear(2, 400)
+        self.fc4 = nn.Linear(400, 784)
+
+    def encode(self, x):
+        h1 = F.relu(self.fc1(x))
+        std = torch.exp(0.5*self.fc22(h1))
+        return Independent(Normal(self.fc21(h1), std), 1)
+
+    def decode(self, z):
+        h3 = F.relu(self.fc3(z))
+        return Independent(Bernoulli(logits=self.fc4(h3)), 1)
+
+    def forward(self, x):
+        x = x.view(-1, 784)
+        q = self.encode(x)
+        z = q.rsample()
+        prior = Independent(Normal(torch.zeros_like(z), torch.ones_like(z)), 1)
+        return -(self.decode(z).log_prob(x) - kl_divergence(q, prior)).sum()
+
+
+def train_dist(model, epochs=10):
+    optimizer = optim.Adam(model.parameters(), lr=1e-3)
+    model.train()
+    for epoch in range(1, epochs + 1):
+        train_loss = 0
+        for data, _ in train_loader:
+            optimizer.zero_grad()
+            loss = model(data)
+            loss.backward()
+            train_loss += loss.item()
+            optimizer.step()
+    print('Average loss after {} epochs: {:.2f}'.format(
+          epochs, train_loss / len(train_loader.dataset)))
+```
+
+```{python}
+vae_dist = VAEDist()
+train_dist(vae_dist)
+```
+
+```{python, out.width="100%"}
+plot_vae(lambda x: vae_dist.encode(x).mean,
+         lambda z: vae_dist.decode(z).mean,
+         'VAE with torch.distributions')
+```
+
+This is the same model as in part 1 written with distribution objects, so we get a similar loss and similar plots. The layout of the clusters can differ, since the training starts from a different random initialization.
