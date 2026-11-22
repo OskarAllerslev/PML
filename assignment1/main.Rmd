@@ -203,6 +203,7 @@ Integrating the mixture over $\mathbf{x}_b$ and as the sum is finite, we can swa
 $p(\mathbf{x}_a) = \sum_j \pi_j\, p(\mathbf{x}_a \mid j)$. By the product rule,
 \[
   p(\mathbf{x}_b \mid \mathbf{x}_a) = \frac{p(\mathbf{x}_a, \mathbf{x}_b)}{p(\mathbf{x}_a)}
+  = \frac{\sum_k \pi_k\, p(\mathbf{x}_a, \mathbf{x}_b \mid k)}{\sum_j \pi_j\, p(\mathbf{x}_a \mid j)}
   = \frac{\sum_k \pi_k\, p(\mathbf{x}_a \mid k)\, p(\mathbf{x}_b \mid \mathbf{x}_a, k)}
          {\sum_j \pi_j\, p(\mathbf{x}_a \mid j)},
 \]
@@ -272,7 +273,7 @@ if hasattr(tli, '_StderrHandler'):
     tli._StderrHandler.stream = property(lambda self: sys.stderr, lambda self, value: None)
 ```
 
-## Programming exercise pt. 2: VAE on binarized MNIST
+## Programming exercise 2
 
 The VAE has a latent variable $z$ with prior $p(z) = N(0, I)$ and a decoder $p(x|z)$, so $p(x) = \int p(z)\,p(x|z)\,dz$ , as in Section 8 in the notes. Since the pixels are 0 or 1, the decoder gives a Bernoulli probability for each pixel. The encoder approximates the posterior with $q(z|x) = N(\mu(x), \operatorname{diag}(\sigma^2(x)))$, and we train by maximizing the ELBO value $$\mathbb{E}_{q(z|x)}[\log p(x|z)] - KL(q(z|x)\,\|\,p(z)).$$
 This is the loss used in the reference example, which we use as a starting point. We load the data with the data loaders from the exercise.
@@ -315,9 +316,9 @@ class VAE(nn.Module):
     def __init__(self):
         super(VAE, self).__init__()
         self.fc1 = nn.Linear(784, 400)
-        self.fc21 = nn.Linear(400, 2)
-        self.fc22 = nn.Linear(400, 2)
-        self.fc3 = nn.Linear(2, 400)
+        self.fc21 = nn.Linear(400, 2) # here we changed it
+        self.fc22 = nn.Linear(400, 2) # again
+        self.fc3 = nn.Linear(2, 400) # again
         self.fc4 = nn.Linear(400, 784)
 
     def encode(self, x):
@@ -382,7 +383,7 @@ train(vae)
 
 ### 2. Decoding a grid of latent points
 
-We take $k$ equally spaced values $u$ in $(0, 1)$ and map them through the inverse Gaussian CDF, $z = \Phi^{-1}(u)$. A uniform $u$ gives $\Phi^{-1}(u) \sim N(0, 1)$, so the grid points are equally spaced in probability under the prior $p(z)$. We leave out $u = 0$ and $u = 1$, since $\Phi^{-1}$ is $\pm\infty$ there. For each of the $k \times k$ grid points we show the mean of $p(x|z)$, i.e. the pixel probabilities, as a $28 \times 28$ image.
+We take $k$ equally spaced values $u$ in $(0, 1)$ and map them through the inverse Gaussian CDF, $z = \Phi^{-1}(u)$. A uniform $u$ gives $\Phi^{-1}(u) \sim N(0, 1)$, so that means the grid points are equally spaced in probability under the prior $p(z)$. We leave out $u = 0$ and $u = 1$, due to that $\Phi^{-1}$ is $\pm\infty$ there. For each of the $k \times k$ grid points we show the mean of $p(x|z)$, that is the pixel probabilities, as a $28 \times 28$ image.
 
 ```{python}
 def plot_manifold(ax, decode, k=15):
@@ -393,8 +394,7 @@ def plot_manifold(ax, decode, k=15):
     grid = imgs.flip(0).permute(0, 2, 1, 3).reshape(k * 28, k * 28)
     ax.imshow(grid, cmap='gray', vmin=0, vmax=1)
     ax.axis('off')
-    ax.set_title('p(x|z) on a grid')
-
+    ax.set_title('p(x given z) on a grid')
 
 def plot_vae(encode, decode, title):
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 4.5))
