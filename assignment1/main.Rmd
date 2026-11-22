@@ -248,11 +248,7 @@ Then $\widetilde{\mathbf{W}}\widetilde{\mathbf{W}}^T = \mathbf{W}\mathbf{L}\math
   \widetilde{\mathbf{W}}\widetilde{\mathbf{W}}^T + \sigma^2\mathbf{I}\right),
 \]
 which is the standard PPCA marginal (12.35)--(12.36) with parameters $\widetilde{\mathbf{W}}$,
-$\widetilde{\mu}$ and $\sigma^2$. Any standard PPCA model $(\mathbf{W}_0, \mu_0, \sigma^2)$
-is obtained from the general model with $\mathbf{W} = \mathbf{W}_0\mathbf{L}^{-1}$ and
-$\mu = \mu_0 - \mathbf{W}_0\mathbf{L}^{-1}\mathbf{m}$. So for any valid $\mathbf{m}$ and $\Sigma$ the two
-models give the same family of marginals $p(\mathbf{x})$, and assuming
-$p(\mathbf{z}) = \mathcal{N}(\mathbf{z} \mid \mathbf{0}, \mathbf{I})$ loses no generality.
+$\widetilde{\mu}$ and $\sigma^2$. Since $\Sigma = \mathbf{L}\mathbf{L}^T$ exists for any valid covariance, this works for any $\mathbf{m}$ and $\Sigma$, so assuming $p(\mathbf{z}) = \mathcal{N}(\mathbf{z} \mid \mathbf{0}, \mathbf{I})$ ( should not loose any generality?).
 
 
 
@@ -411,99 +407,3 @@ plot_vae(lambda x: vae.encode(x)[0], vae.decode, 'VAE from the PyTorch example')
 The left plot shows the encoder mean $\mu(x)$ of each test image, colored by digit. The VAE never sees the labels, but images of the same digit still end up in the same region. The 1s form a separate band, while digits that look alike, like 4, 7 and 9 or 3, 5 and 8, overlap in the middle. The points lie around the origin with roughly unit scale, because the KL term pulls $q(z|x)$ towards $N(0, I)$.
 
 The right plot shows the decoded grid. The digits change smoothly from one to another, and every grid point gives a digit-like image, because the encoded data covers the region where the prior has its mass. Each digit appears in the same place as its cluster in the left plot.
-
-### 3. Better separation with a deeper network
-
-We make the encoder and decoder deeper, with two hidden layers of 512 and 256 units, and train for 20 epochs instead of 10. A more flexible encoder can place the digits further apart in the 2D latent space.
-
-```{python}
-class DeepVAE(VAE):
-    def __init__(self):
-        super(DeepVAE, self).__init__()
-        self.enc = nn.Sequential(nn.Linear(784, 512), nn.ReLU(),
-                                 nn.Linear(512, 256), nn.ReLU())
-        self.fc21 = nn.Linear(256, 2)
-        self.fc22 = nn.Linear(256, 2)
-        self.dec = nn.Sequential(nn.Linear(2, 256), nn.ReLU(),
-                                 nn.Linear(256, 512), nn.ReLU(),
-                                 nn.Linear(512, 784))
-
-    def encode(self, x):
-        h = self.enc(x)
-        return self.fc21(h), self.fc22(h)
-
-    def decode(self, z):
-        return torch.sigmoid(self.dec(z))
-```
-
-```{python}
-deep_vae = DeepVAE()
-train(deep_vae, epochs=20)
-```
-
-```{python, out.width="100%"}
-plot_vae(lambda x: deep_vae.encode(x)[0], deep_vae.decode, 'Deeper VAE')
-```
-
-The average loss drops from about 161 to about 139. The 0s and 1s are now on opposite sides of the latent space, and 2 and 6 are more separated than before. 4, 7 and 9 still overlap, since they look alike and two dimensions leave little room.
-
-### 4. Using torch.distributions
-
-Now the encoder returns a Normal distribution object and the decoder a Bernoulli distribution object. `Independent(..., 1)` makes `log_prob` sum over the latent dimensions and the pixels. We sample with `rsample()`, which is reparameterized, so the `reparameterize` method is no longer needed, and `kl_divergence` gives the KL term. The loss is minus the ELBO.
-
-```{python}
-from torch.distributions import Normal, Bernoulli, Independent, kl_divergence
-
-class VAEDist(nn.Module):
-    def __init__(self):
-        super(VAEDist, self).__init__()
-        self.fc1 = nn.Linear(784, 400)
-        self.fc21 = nn.Linear(400, 2)
-        self.fc22 = nn.Linear(400, 2)
-        self.fc3 = nn.Linear(2, 400)
-        self.fc4 = nn.Linear(400, 784)
-
-    def encode(self, x):
-        h1 = F.relu(self.fc1(x))
-        std = torch.exp(0.5*self.fc22(h1))
-        return Independent(Normal(self.fc21(h1), std), 1)
-
-    def decode(self, z):
-        h3 = F.relu(self.fc3(z))
-        return Independent(Bernoulli(logits=self.fc4(h3)), 1)
-
-    def forward(self, x):
-        x = x.view(-1, 784)
-        q = self.encode(x)
-        z = q.rsample()
-        prior = Independent(Normal(torch.zeros_like(z), torch.ones_like(z)), 1)
-        return -(self.decode(z).log_prob(x) - kl_divergence(q, prior)).sum()
-
-
-def train_dist(model, epochs=10):
-    optimizer = optim.Adam(model.parameters(), lr=1e-3)
-    model.train()
-    for epoch in range(1, epochs + 1):
-        train_loss = 0
-        for data, _ in train_loader:
-            optimizer.zero_grad()
-            loss = model(data)
-            loss.backward()
-            train_loss += loss.item()
-            optimizer.step()
-    print('Average loss after {} epochs: {:.2f}'.format(
-          epochs, train_loss / len(train_loader.dataset)))
-```
-
-```{python}
-vae_dist = VAEDist()
-train_dist(vae_dist)
-```
-
-```{python, out.width="100%"}
-plot_vae(lambda x: vae_dist.encode(x).mean,
-         lambda z: vae_dist.decode(z).mean,
-         'VAE with torch.distributions')
-```
-
-This is the same model as in part 1 written with distribution objects, so we get a similar loss and similar plots. The layout of the clusters can differ, since the training starts from a different random initialization.
