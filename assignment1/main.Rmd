@@ -96,7 +96,7 @@ $$
 
 Inserting in Bayes theorem:
 
-$$p(F=0|D=0) = \frac{p(D=0|F=0)\,p(F=0)}{p(D=0)} = \frac{0.748 \cdot 0.1}{0.352} \approx 0.213$$
+$$p(F=0|D=0) = \frac{p(D=0|F=0)\,p(F=0)}{p(D=0)} = \frac{0.748 \cdot 0.1}{0.352} \approx 0.2125$$
 
 If also $B=0$ is observed, we use Bayes theorem conditioned on $B=0$. Since $B$ and $F$ are independent, $p(F|B=0) = p(F)$, and we only sum over $F$ in the denominator:
 
@@ -183,9 +183,6 @@ run(c(0.1, 1), 0.01)
 With 10 times less label noise, every data point is 10 times more informative. $S_N^{-1} \approx \operatorname{diag}(201, 2001)$.
 
 The posterior is tighter, so on the $[-3,3]^2$ grid it is almost a point, and it sits closer to the true $\theta$. It is still stretched along $\theta_1$, because the shape comes from $\Sigma_x$, not from the noise. The Predictive variance is smaller overall. The floor drops from 0.1 to 0.01, and the $x^TS_Nx$ term shrinks too.
-
-
-
 
 
 
