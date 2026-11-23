@@ -4,7 +4,6 @@ author: "Markus, Oskar, Jan"
 date: "2026-11-17"
 output:
   pdf_document: default
-  html_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -37,16 +36,24 @@ Let $X \in L^2(\Omega, \mathcal{F}, P)$ and let $Y$ be a random variable. Then t
 \end{align*}
 Which shows the desired result. 
 One can replace the integral calculations along the way with the proper distribution functions. 
+Important to note that all above is only defined down to almost sure equality.
 
 ## Exercise 8.9
-
-We look at figure 8.26. The Markov blanket of $x$ consists of its parents, its children and the other parents of its children. We condition on all of these. To show the result with d separation, we have to show that every path from $x$ to a node $y$ outside the blanket is blocked. Such a path has to leave $x$ either through a parent or through a child of $x$. If the path goes through a parent $p$, the arrow goes from $p$ into $x$. This means $p$ is either head to tail or tail to tail on the path. Since $p$ is observed, the path is blocked.
+look at figure 8.26. 
+We define the markov blanket as 
+\begin{align*}
+MB(x) &= pa(x) \cup ch(x) \cup \bigcup_{c \in ch(x)} \{ pa(c) \setminus \{x\} \}
+\end{align*}
+The task is to proove that $P(x \mid MB(x) \cap R) = P(X \mid MB(x))$ where $R = V \setminus \{\{x\} \cup MB(x)\}$ in the DAG $(V,E)$.
+<!-- the following is a big hand wavy i think, one could make a proper density argument but lets hope they think this is fine. -->
+To show the result with d separation, we have to show that every path from $x$ to a node $y$ outside the blanket is blocked. 
+Such a path has to leave $x$ either through a parent or through a child of $x$. If the path goes through a parent $p$, the arrow goes from $p$ into $x$. This means $p$ is either head to tail or tail to tail on the path. Since $p$ is observed, the path is blocked.
 
 If the path goes through a child $c$, there are two cases. If the path goes $x \to c \to \ldots$, then $c$ is head-to-tail and observed, so the path is blocked. If the path goes $x \to c \leftarrow z$, then $c$ is head-to-head, so $c$ does not block the path. But then $z$ is also a parent of $c$, so $z$ is a co-parent and is observed. The arrow goes out of $z$, so $z$ is head-to-tail or tail-to-tail, and the path is blocked at $z$.
 
 So all paths from $x$ to nodes outside the blanket are blocked, which means
-$$p(x | \text{blanket}, \text{rest}) = p(x | \text{blanket})$$
-so $x$ is independent of the rest of the graph given its Markov blanket.
+$$P(x \mid MB(x) \cap R) = P(X \mid MB(x))$$
+so $x$ is independent of the rest of the graph given its Markov blanket. -->
 
 
 ## Exercise 8.11
@@ -207,23 +214,19 @@ $\mathbf{x} = (\mathbf{x}_a, \mathbf{x}_b)$, and assume $p(\mathbf{x}_a) > 0$. N
   p(\mathbf{x}_a \mid k) = \int p(\mathbf{x}_a, \mathbf{x}_b \mid k)\, d\mathbf{x}_b, \qquad
   p(\mathbf{x}_b \mid \mathbf{x}_a, k) = \frac{p(\mathbf{x}_a, \mathbf{x}_b \mid k)}{p(\mathbf{x}_a \mid k)}.
 \]
-Integrating the mixture over $\mathbf{x}_b$ and as the sum is finite, we can swap sum and integral (fubini), gives
-$p(\mathbf{x}_a) = \sum_j \pi_j\, p(\mathbf{x}_a \mid j)$. By the product rule,
-\[
-  p(\mathbf{x}_b \mid \mathbf{x}_a) = \frac{p(\mathbf{x}_a, \mathbf{x}_b)}{p(\mathbf{x}_a)}
-  = \frac{\sum_k \pi_k\, p(\mathbf{x}_a, \mathbf{x}_b \mid k)}{\sum_j \pi_j\, p(\mathbf{x}_a \mid j)}
-  = \frac{\sum_k \pi_k\, p(\mathbf{x}_a \mid k)\, p(\mathbf{x}_b \mid \mathbf{x}_a, k)}
-         {\sum_j \pi_j\, p(\mathbf{x}_a \mid j)},
-\]
-which we then write it as
-\[
-  p(\mathbf{x}_b \mid \mathbf{x}_a) = \sum_{k=1}^K \lambda_k(\mathbf{x}_a)\, p(\mathbf{x}_b \mid \mathbf{x}_a, k)
-\]
-with
-\[
-  \lambda_k(\mathbf{x}_a) = \frac{\pi_k\, p(\mathbf{x}_a \mid k)}{\sum_{j=1}^K \pi_j\, p(\mathbf{x}_a \mid j)}
-  = p(k \mid \mathbf{x}_a).
-\]
+Now just simply use the given information
+\begin{align*}
+P(X_b \mid X_a) &= \frac{P(X_b \cap X_a)}{P(X_a)} \\ 
+&= \frac{
+\sum_{k} P(Z = k) P(X_a \cap X_b \mid Z = k) 
+}{
+\sum_j P(Z = j) P(X_a \mid Z = j)
+} \\ 
+&= \frac{1}{\sum_j P(Z = j)P(X_a \mid Z = j)} \sum_k P(Z = k)P(X_b \mid X_a \cap \{ Z = k\}) P(X_a \mid Z = k) \\ 
+&= \sum_k \underbrace{\frac{P(Z = k) P(X_a \mid Z = k)}{\sum_j P(Z = j) P(X_a \mid Z = j)}}_{=: \lambda_k(X_a) \, = \, P(Z = k \mid X_a)} P(X_b \mid X_a \cap \{ Z = k\})
+\end{align*}
+
+
 This is a mixture distribution. The coefficients fullfill $\lambda_k \geq 0$ and also $\sum_k \lambda_k = 1$,
 and each component $p(\mathbf{x}_b \mid \mathbf{x}_a, k)$ integrates to
 $p(\mathbf{x}_a \mid k)/p(\mathbf{x}_a \mid k) = 1$ over $\mathbf{x}_b$.
@@ -234,7 +237,7 @@ For a Gaussian mixture, $p(\mathbf{x}_a \mid k) = \mathcal{N}(\mathbf{x}_a \mid 
 by (2.92) and (2.93), and $p(\mathbf{x}_b \mid \mathbf{x}_a, k)$ is the Gaussian given by (2.81) to (2.82)
 with $a$ and $b$ swapped. So the conditional is again a Gaussian mixture.
 
-\section*{Exercise 12.4}
+## Exercise 12.4
 
 Let $p(\mathbf{z}) = \mathcal{N}(\mathbf{z} \mid \mathbf{m}, \Sigma)$ and
 $p(\mathbf{x} \mid \mathbf{z}) = \mathcal{N}(\mathbf{x} \mid \mathbf{W}\mathbf{z} + \mu, \sigma^2\mathbf{I})$.
