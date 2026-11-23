@@ -2,7 +2,9 @@
 title: "PML - First assignment"
 author: "Markus, Oskar, Jan"
 date: "2026-11-17"
-output: pdf_document
+output:
+  pdf_document: default
+  html_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -10,25 +12,31 @@ knitr::opts_chunk$set(echo = TRUE, fig.width = 5, fig.height = 4.5, fig.align = 
                       attr.source = ".numberLines")
 set.seed(2026)
 ```
-
-## Exercise 2.8
-
-We prove the law of total expectation in the continuous case by using (4), $p(x) = \int p(x,y)\,dy$ and (7), $p(x,y) = p(x|y)p(y)$ from the lecture notes. We work backwards and start from definition of conditional expectation:
-
+## Exercise 2.8 (ALT)
+To prove LOTE, one should need $X \in L^1(\Omega, \mathcal{F}, P)$.
+By definition when proving the LOTE, one assumes the existence of a random variable called the conditional expectation which satisfies, amongst integrability and measurability conditions
 \begin{align*}
-\mathbb{E}_Y[\mathbb{E}_X[X\mid Y]]
-&= \int \mathbb{E}_X[X\mid y]p(y)\,dy\\
-&= \int \left(\int x\,p(x\mid y)\,dx\right)p(y)\,dy\\
-&= \iint x\,p(x\mid y)p(y)\,dx\,dy\\
-&= \iint x\,p(x,y)\,dx\,dy\\
-&= \int x\left(\int p(x,y)\,dy\right)dx\\
-&= \int x\,p(x)\,dx\\
-&= \mathbb{E}[X].
+\int_G E(X \mid Y) dP &= \int_G X dP \qquad \forall G \in \sigma(Y)
 \end{align*}
-
-We then prove the law of total variance by expanding the conditional variance and the variance of the conditional expectation using the variance identity $\operatorname{var}(x) = \mathbb{E}[x^2] - (\mathbb{E}[x])^2$, which follows from expanding the definition (20) in the notes. Starting from the right side and using the law of total expectation from above to the final expression gives:
-
-$\mathbb{E}_y[\operatorname{var}_x(x\mid y)] + \operatorname{var}_y(\mathbb{E}_x[x\mid y]) = \mathbb{E}_y[\mathbb{E}_x[x^2\mid y]] - \mathbb{E}_y[(\mathbb{E}_x[x\mid y])^2] + \mathbb{E}_y[(\mathbb{E}_x[x\mid y])^2] - (\mathbb{E}_y[\mathbb{E}_x[x\mid y]])^2 = \mathbb{E}_y[\mathbb{E}_x[x^2\mid y]] - (\mathbb{E}_y[\mathbb{E}_x[x\mid y]])^2 = \mathbb{E}[x^2] - (\mathbb{E}[x])^2 = \operatorname{var}(x)$
+Thus the direct proof is as follows 
+\begin{align*}
+\int_\Omega X dP &= \int_\Omega E(X \mid Y) dP \\
+&= \int_R \int_R x P_{X \mid Y = y}(dx)P_Y(dy)
+\end{align*}
+The LOTV follows by using $(a+b)^2 = a^2 + b^2 + 2ab$.
+Let $X \in L^2(\Omega, \mathcal{F}, P)$ and let $Y$ be a random variable. Then the conditional expectation $E(X \mid Y)$ exists and is a.s. unique, and all variances below are finite. Define the conditional variance as $V(X \mid Y) = E\left((X - E(X \mid Y))^2 \mid Y\right)$. Then
+\begin{align*}
+ VX &= \int_\Omega (X - E(X))^2 dP \\ 
+ &= \int_\Omega \left(X - E(X \mid Y) + E(X \mid Y) - E(X)\right)^2 dP \\ 
+ &= \int_\Omega (X-E(X\mid Y))^2 dP + \int_\Omega (E(X \mid Y) - E(X))^2 dP + 2\int_\Omega (X - E(X \mid Y) )( E(X \mid Y) - E(X))dP \\
+ &= \int_\Omega E\left((X-E(X\mid Y))^2 \mid Y\right) dP + \int_\Omega (E(X \mid Y) - E(X))^2 dP + 2\int_\Omega E\left((X - E(X \mid Y) )( E(X \mid Y) - E(X)) \mid Y\right) dP \\
+ &= \int_\Omega V(X \mid Y) dP + \int_\Omega (E(X \mid Y) - E(X))^2 dP + 2\int_\Omega ( E(X \mid Y) - E(X)) E\left(X - E(X \mid Y) \mid Y\right) dP \\
+ &= \int_\Omega V(X \mid Y) dP + \int_\Omega (E(X \mid Y) - E(X))^2 dP + 2\int_\Omega ( E(X \mid Y) - E(X)) (E(X \mid Y) - E(X \mid Y)) dP \\
+ &= \int_\Omega V(X \mid Y) dP + \int_\Omega (E(X \mid Y) - E(E(X \mid Y)))^2 dP \\
+ &= E(V(X \mid Y)) + V(E(X \mid Y)).
+\end{align*}
+Which shows the desired result. 
+One can replace the integral calculations along the way with the proper distribution functions. 
 
 ## Exercise 8.9
 
