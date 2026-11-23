@@ -2,3 +2,8 @@
 .Rhistory
 .RData
 .Ruserdata
+
+# Local preview / render output
+live_preview.R
+*_files/
+*.html
